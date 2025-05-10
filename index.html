@@ -18,7 +18,7 @@
         }
         
         body {
-            font-family: 'Fira Code', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
@@ -62,9 +62,8 @@
         #asciiOutput {
             white-space: pre;
             overflow-x: auto;
-            font-size: 8px;
-            line-height: 1;
-            letter-spacing: 2px;
+            font-size: 12px;
+            line-height: 12px;
             background-color: var(--bg-darker);
             color: var(--text-primary);
             padding: 15px;
@@ -241,7 +240,6 @@
             color: var(--text-secondary);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <h1>Image to ASCII Art Converter</h1>
@@ -301,7 +299,7 @@
             const copyButton = document.getElementById('copyButton');
             const charPalette = document.getElementById('charPalette');
             
-            // Default character palette (similar to your cat example)
+            // Default character palette
             const defaultChars = " .,:;+*?%S#@";
             let selectedChars = defaultChars;
             
@@ -413,8 +411,8 @@
                 
                 // Calculate dimensions while maintaining aspect ratio
                 const width = parseInt(widthRange.value);
-                // Adjust height to account for character aspect ratio (characters are taller than wide)
-                const height = Math.floor(width * (img.height / img.width) * 0.5);
+                // Adjusted for Google Docs compatibility (characters are roughly 2x as tall as they are wide)
+                const height = Math.floor(width * (img.height / img.width) * 0.45);
                 
                 canvas.width = width;
                 canvas.height = height;
