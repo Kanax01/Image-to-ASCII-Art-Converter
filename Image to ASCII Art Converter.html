@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to ASCII Art Converter</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-darker: #0a0a0a;
+            --bg-light: #1e1e1e;
+            --accent: #4CAF50;
+            --accent-hover: #45a049;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border: #333;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .panel {
+            background-color: var(--bg-light);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px var(--shadow);
+            border: 1px solid var(--border);
+        }
+        
+        h2 {
+            color: var(--accent);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 400;
+            font-size: 1.4rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        
+        #asciiOutput {
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 8px;
+            line-height: 8px;
+            background-color: var(--bg-darker);
+            color: var(--text-primary);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+        
+        #imageInput {
+            display: none;
+        }
+        
+        .upload-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .upload-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .file-name {
+            margin-left: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        #copyButton {
+            padding: 12px 24px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        #copyButton:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .char-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .char-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background-color: var(--bg-darker);
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        
+        .char-option:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .char-option.selected {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .preview-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .control-group {
+                min-width: 100%;
+            }
+        }
+        
+        /* Animation for loading */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Image to ASCII Art Converter</h1>
+    <div class="container">
+        <div class="panel">
+            <h2>Image Settings</h2>
+            <label for="imageInput" class="upload-btn">Choose Image</label>
+            <input type="file" id="imageInput" accept="image/*">
+            <span class="file-name" id="fileName">No image selected</span>
+            
+            <div class="preview-container">
+                <div class="preview-box">
+                    <div class="preview-title">Original Image:</div>
+                    <img id="imagePreview" alt="Image preview">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="widthRange">Width (characters)</label>
+                    <input type="range" id="widthRange" min="10" max="200" value="60">
+                    <div class="value-display"><span id="widthValue">60</span> characters</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="contrastRange">Contrast</label>
+                    <input type="range" id="contrastRange" min="0" max="200" value="100">
+                    <div class="value-display"><span id="contrastValue">100</span>%</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Character Palette</label>
+                <div class="char-palette" id="charPalette">
+                    <!-- Character options will be added here by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>ASCII Art Output</h2>
+            <div id="asciiOutput" class="loading">Upload an image to generate ASCII art...</div>
+            <button id="copyButton">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('imageInput');
+            const fileName = document.getElementById('fileName');
+            const imagePreview = document.getElementById('imagePreview');
+            const asciiOutput = document.getElementById('asciiOutput');
+            const widthRange = document.getElementById('widthRange');
+            const widthValue = document.getElementById('widthValue');
+            const contrastRange = document.getElementById('contrastRange');
+            const contrastValue = document.getElementById('contrastValue');
+            const copyButton = document.getElementById('copyButton');
+            const charPalette = document.getElementById('charPalette');
+            
+            // Default character palette (similar to your cat example)
+            const defaultChars = " .,:;+*?%S#@";
+            let selectedChars = defaultChars;
+            
+            // Create character palette options
+            function createCharPalette() {
+                charPalette.innerHTML = '';
+                
+                // Add some preset options
+                const presets = [
+                    {name: "Default", chars: " .,:;+*?%S#@"},
+                    {name: "Blocks", chars: " ░▒▓█"},
+                    {name: "Simple", chars: " .:-=+*#%@"},
+                    {name: "Dots", chars: " ·:!░▒▓█"},
+                    {name: "Custom", chars: "", custom: true}
+                ];
+                
+                presets.forEach(preset => {
+                    const option = document.createElement('div');
+                    option.className = 'char-option';
+                    option.textContent = preset.name;
+                    option.dataset.chars = preset.chars;
+                    if (preset.custom) option.dataset.custom = true;
+                    option.addEventListener('click', function() {
+                        if (this.dataset.custom) {
+                            const customChars = prompt("Enter your custom characters (light to dark):", selectedChars);
+                            if (customChars) {
+                                selectedChars = customChars;
+                                updateAsciiArt();
+                            }
+                        } else {
+                            selectedChars = this.dataset.chars;
+                            document.querySelectorAll('.char-option').forEach(opt => opt.classList.remove('selected'));
+                            this.classList.add('selected');
+                            updateAsciiArt();
+                        }
+                    });
+                    charPalette.appendChild(option);
+                });
+                
+                // Select the default option
+                charPalette.children[0].classList.add('selected');
+            }
+            
+            // Update range value displays
+            widthRange.addEventListener('input', function() {
+                widthValue.textContent = this.value;
+                updateAsciiArt();
+            });
+            
+            contrastRange.addEventListener('input', function() {
+                contrastValue.textContent = this.value;
+                updateAsciiArt();
+            });
+            
+            // Copy to clipboard
+            copyButton.addEventListener('click', function() {
+                if (asciiOutput.textContent.includes('Upload an image')) return;
+                
+                const originalText = this.textContent;
+                navigator.clipboard.writeText(asciiOutput.textContent)
+                    .then(() => {
+                        this.textContent = "✓ Copied!";
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        this.textContent = "✗ Failed to copy";
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    });
+            });
+            
+            // Current image data
+            let currentImageData = null;
+            
+            // Handle image upload
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                fileName.textContent = file.name;
+                asciiOutput.textContent = "Processing image...";
+                asciiOutput.classList.add('loading');
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Show preview
+                        imagePreview.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                        
+                        currentImageData = getImageData(img);
+                        updateAsciiArt();
+                        asciiOutput.classList.remove('loading');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // Get image data from Image object
+            function getImageData(img) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate dimensions while maintaining aspect ratio
+                const width = parseInt(widthRange.value);
+                const height = Math.floor(width * (img.height / img.width) * 0.5); // Adjust for character aspect ratio
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                ctx.drawImage(img, 0, 0, width, height);
+                return ctx.getImageData(0, 0, width, height);
+            }
+            
+            // Update ASCII art based on current settings
+            function updateAsciiArt() {
+                if (!currentImageData) return;
+                
+                asciiOutput.textContent = "Generating ASCII art...";
+                
+                // Use setTimeout to allow UI to update before heavy computation
+                setTimeout(() => {
+                    const width = currentImageData.width;
+                    const height = currentImageData.height;
+                    const data = currentImageData.data;
+                    const contrast = parseInt(contrastRange.value) / 100;
+                    
+                    let asciiArt = '';
+                    
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const r = data[index];
+                            const g = data[index + 1];
+                            const b = data[index + 2];
+                            
+                            // Calculate brightness with contrast adjustment
+                            let brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                            brightness = (brightness - 0.5) * contrast + 0.5;
+                            brightness = Math.max(0, Math.min(1, brightness));
+                            
+                            // Map brightness to character
+                            const charIndex = Math.floor(brightness * (selectedChars.length - 1));
+                            asciiArt += selectedChars[charIndex];
+                        }
+                        asciiArt += '\n';
+                    }
+                    
+                    asciiOutput.textContent = asciiArt;
+                }, 50);
+            }
+            
+            // Initialize
+            createCharPalette();
+        });
+    </script>
+</body>
+</html>
