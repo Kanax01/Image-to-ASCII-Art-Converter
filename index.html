@@ -63,7 +63,8 @@
             white-space: pre;
             overflow-x: auto;
             font-size: 8px;
-            line-height: 8px;
+            line-height: 1;
+            letter-spacing: 2px;
             background-color: var(--bg-darker);
             color: var(--text-primary);
             padding: 15px;
@@ -412,7 +413,8 @@
                 
                 // Calculate dimensions while maintaining aspect ratio
                 const width = parseInt(widthRange.value);
-                const height = Math.floor(width * (img.height / img.width) * 0.5); // Adjust for character aspect ratio
+                // Adjust height to account for character aspect ratio (characters are taller than wide)
+                const height = Math.floor(width * (img.height / img.width) * 0.5);
                 
                 canvas.width = width;
                 canvas.height = height;
